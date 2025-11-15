@@ -1,19 +1,46 @@
 # Home Assistant Resources
 
-This repository collects various Home Assistant-related artifacts that I use and share with the community.
+Personal collection of Home Assistant blueprints, Zigbee device research, and utility tools.
 
-The focus is on being **self-documenting**:
+## Contents
 
-- Each folder owns its own lightweight documentation (e.g. local `README.md` or `INDEX.md`).
-- The top-level README stays minimal so it does not need constant updates.
+- **[Blueprints](ha-assets/quirks/blueprints/)** - Automation blueprints for various devices
+- **[Zigbee Devices](research/zigbee/devices/)** - Device research, quirks, and documentation
+- **[Tools](tools/)** - Shell scripts and utilities for HA management
+- **[Docs](docs/)** - Guides, references, and build plans
 
-## What lives here
+See individual directories for detailed documentation.
 
-Typical content you may find in this repo:
+---
 
-- Blueprints for specific devices or patterns.
-- Zigbee device research (signatures, logs, quirks notes).
-- Shell scripts and small tooling around Home Assistant (e.g., log helpers).
-- Documentation and how-tos related to ZHA, Zigbee, hardening, and operations.
+## Featured Content
 
-For more detail about how this repo evolves over time, see `BUILD_PLAN.md`.
+### Tuya TS004F Rotary Knob
+Enhanced blueprint with comprehensive device research based on 147 captured events.
+
+- **Blueprint:** [ha-assets/quirks/blueprints/tuya-ts004f/](ha-assets/quirks/blueprints/tuya-ts004f/)
+- **Research:** [research/zigbee/devices/tuya-ts004f/](research/zigbee/devices/tuya-ts004f/)
+- **Key Features:** Mode detection, speed-aware dimming, color temperature control
+
+**Quick Import:**
+```
+https://github.com/gunnjr/ha-resources/blob/main/ha-assets/quirks/blueprints/tuya-ts004f/ts004f-enhanced.yaml
+```
+
+---
+
+## Repository Philosophy
+
+This repo follows a **self-documenting structure** where directory names and local README files explain their contents. This keeps the main README stable and avoids massive tables that require constant updates.
+
+See [BUILD_PLAN.md](BUILD_PLAN.md) for the design philosophy and build-out plan.
+
+---
+
+## Contributing
+
+This is primarily a personal repository for sharing Home Assistant work with the community. Pull requests welcome for fixes and improvements!
+
+## License
+
+MIT - Use freely with attribution

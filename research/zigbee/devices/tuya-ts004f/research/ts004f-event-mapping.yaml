@@ -1,0 +1,294 @@
+# TS004F Rotary Knob - Quick Event Reference
+# Compact mapping of physical actions to ZHA events
+
+device:
+  model: TS004F
+  manufacturer: _TZ3000_4fjiwweb
+  modes:
+    - id: 0
+      name: Mode 1 (Default)
+      description: Normal operation with full LevelControl support
+      rotation_cluster: 8  # Generates cluster 8 'step' commands
+    - id: 1
+      name: Mode 2
+      description: Alternative mode without LevelControl
+      rotation_cluster: null  # NO cluster 8 commands!
+
+# Parameter value meanings
+parameters:
+  step_mode:
+    0: "RIGHT/UP (clockwise, brightness increase)"
+    1: "LEFT/DOWN (counter-clockwise, brightness decrease)"
+    3: "LEFT in color temp context (cooler)"
+
+  rotate_type:
+    0: "RIGHT (clockwise)"
+    1: "LEFT (counter-clockwise)"
+
+  press_type:
+    0: "Single press"
+    1: "Double press"
+    2: "Long press"
+
+  step_size:
+    description: "Magnitude of brightness/color change"
+    slow: 13
+    moderate: 26
+    fast: 52-78
+    very_fast: 91+
+
+  transition_time:
+    description: "Speed indicator for rotations"
+    fast: 1
+    moderate: 2
+    slow: 3
+
+# Action mapping
+actions:
+  # Button Actions
+  - action: single_click
+    physical: "Press button once quickly"
+    event_count: 3
+    primary_trigger:
+      cluster_id: 6
+      command: remote_button_short_press
+    events:
+      - {cluster_id: 6, command: "remote_button_short_press"}
+      - {cluster_id: 6, command: "press_type", params: {press_type: 0}}
+      - {cluster_id: 6, command: "toggle"}
+    use_case: "Toggle light on/off"
+
+  - action: double_click
+    physical: "Press button twice quickly"
+    event_count: 3
+    primary_trigger:
+      cluster_id: 6
+      command: remote_button_double_press
+    events:
+      - {cluster_id: 6, command: "remote_button_double_press"}
+      - {cluster_id: 6, command: "press_type", params: {press_type: 1}}
+      - {cluster_id: 6, command: "on"}
+    use_case: "Turn on to full brightness or trigger scene"
+
+  - action: long_press
+    physical: "Hold button for 2-3 seconds"
+    event_count: 6+
+    primary_trigger:
+      cluster_id: 6
+      command: remote_button_long_press
+    events:
+      - {cluster_id: 768, command: "move_saturation"}
+      - {cluster_id: 6, command: "remote_button_long_press"}
+      - {cluster_id: 6, command: "press_type", params: {press_type: 2}}
+      - {cluster_id: 768, command: "move_hue"}
+      - {cluster_id: 768, command: "stop_move_step"}
+    use_case: "Activate special mode or scene"
+
+  # Rotation Actions (Mode 1)
+  - action: rotate_right_slow
+    physical: "Rotate clockwise slowly (~1-2 notches/sec)"
+    mode: 1
+    event_count: 3 per notch
+    primary_trigger:
+      cluster_id: 8
+      command: step
+      params: {step_mode: 0}
+    events:
+      - {cluster_id: 6, command: "right"}
+      - {cluster_id: 6, command: "rotate_type", params: {rotate_type: 0}}
+      - {cluster_id: 8, command: "step", params: {step_mode: 0, step_size: 13, transition_time: 2}}
+    use_case: "Increase brightness smoothly"
+    automation_key: step_mode
+
+  - action: rotate_right_fast
+    physical: "Spin clockwise rapidly"
+    mode: 1
+    event_count: 3 per burst
+    primary_trigger:
+      cluster_id: 8
+      command: step
+      params: {step_mode: 0}
+    events:
+      - {cluster_id: 6, command: "right"}
+      - {cluster_id: 6, command: "rotate_type", params: {rotate_type: 0}}
+      - {cluster_id: 8, command: "step", params: {step_mode: 0, step_size: "52-78", transition_time: "2-3"}}
+    use_case: "Increase brightness quickly"
+    notes: "Larger step_size, fewer events"
+
+  - action: rotate_left_slow
+    physical: "Rotate counter-clockwise slowly"
+    mode: 1
+    event_count: 3 per notch
+    primary_trigger:
+      cluster_id: 8
+      command: step
+      params: {step_mode: 1}
+    events:
+      - {cluster_id: 6, command: "left"}
+      - {cluster_id: 6, command: "rotate_type", params: {rotate_type: 1}}
+      - {cluster_id: 8, command: "step", params: {step_mode: 1, step_size: 13, transition_time: 2}}
+    use_case: "Decrease brightness smoothly"
+    automation_key: step_mode
+
+  - action: rotate_left_fast
+    physical: "Spin counter-clockwise rapidly"
+    mode: 1
+    event_count: 3 per burst
+    primary_trigger:
+      cluster_id: 8
+      command: step
+      params: {step_mode: 1}
+    events:
+      - {cluster_id: 6, command: "left"}
+      - {cluster_id: 6, command: "rotate_type", params: {rotate_type: 1}}
+      - {cluster_id: 8, command: "step", params: {step_mode: 1, step_size: "26-91", transition_time: "1-3"}}
+    use_case: "Decrease brightness quickly"
+
+  # Press + Rotate Actions (Color Control)
+  - action: press_rotate_right_slow
+    physical: "Hold button, rotate clockwise slowly"
+    mode: 1
+    event_count: 5+ per notch
+    primary_trigger:
+      cluster_id: 768
+      command: step_color_temp
+      params: {step_mode: 1}
+    events:
+      - {cluster_id: 6, command: "right"}
+      - {cluster_id: 6, command: "rotate_type", params: {rotate_type: 0}}
+      - {cluster_id: 768, command: "step_color_temp", params: {step_mode: 1, step_size: "18-36", transition_time: 1}}
+      - {cluster_id: 6, command: "remote_button_long_press"}
+      - {cluster_id: 6, command: "press_type", params: {press_type: 2}}
+    use_case: "Color temperature warmer"
+    notes: "Uses cluster 768, NOT cluster 8!"
+
+  - action: press_rotate_right_fast
+    physical: "Hold button, spin clockwise rapidly"
+    mode: 1
+    primary_trigger:
+      cluster_id: 768
+      command: step_color_temp
+    use_case: "Color temperature warmer (fast)"
+    notes: "Similar to slow, but larger step_size"
+
+  - action: press_rotate_left_slow
+    physical: "Hold button, rotate counter-clockwise slowly"
+    mode: 1
+    event_count: 5+ per notch
+    primary_trigger:
+      cluster_id: 768
+      command: step_color_temp
+      params: {step_mode: 3}
+    events:
+      - {cluster_id: 6, command: "left"}
+      - {cluster_id: 6, command: "rotate_type", params: {rotate_type: 1}}
+      - {cluster_id: 768, command: "step_color_temp", params: {step_mode: 3, step_size: "10-20", transition_time: 1}}
+      - {cluster_id: 6, command: "remote_button_long_press"}
+    use_case: "Color temperature cooler"
+    notes: "step_mode 3 = LEFT in color temp context"
+
+  - action: press_rotate_left_fast
+    physical: "Hold button, spin counter-clockwise rapidly"
+    mode: 1
+    primary_trigger:
+      cluster_id: 768
+      command: step_color_temp
+      params: {step_mode: 3}
+    use_case: "Color temperature cooler (fast)"
+
+  # Mode Switching
+  - action: triple_click_to_mode2
+    physical: "Click button 3 times rapidly"
+    event_count: 1
+    primary_trigger:
+      cluster_id: 6
+      command: attribute_updated
+      args: {attribute_name: "switch_mode", value: 1}
+    events:
+      - {cluster_id: 6, command: "attribute_updated", args: {attribute_name: "switch_mode", value: 1}}
+    use_case: "Switch to Mode 2 (disables cluster 8 events)"
+    warning: "Mode 2 breaks dimmer automations!"
+
+  - action: triple_click_to_mode1
+    physical: "Click button 3 times rapidly (from Mode 2)"
+    event_count: 1
+    primary_trigger:
+      cluster_id: 6
+      command: attribute_updated
+      args: {attribute_name: "switch_mode", value: 0}
+    events:
+      - {cluster_id: 6, command: "attribute_updated", args: {attribute_name: "switch_mode", value: 0}}
+    use_case: "Return to Mode 1 (restores cluster 8 events)"
+
+  # Mode 2 Rotation (Broken for dimming)
+  - action: rotate_mode2
+    physical: "Rotate in Mode 2"
+    mode: 2
+    event_count: 2 (NO cluster 8!)
+    primary_trigger:
+      cluster_id: 6
+      command: "right or left"
+    events:
+      - {cluster_id: 6, command: "right or left"}
+      - {cluster_id: 6, command: "rotate_type"}
+    use_case: "NONE - avoid Mode 2 for dimmer control"
+    warning: "NO step commands generated!"
+
+# Automation templates
+automation_templates:
+  dimmer_control:
+    description: "Basic brightness control via rotation (Mode 1)"
+    trigger:
+      platform: event
+      event_type: zha_event
+      event_data:
+        device_id: YOUR_DEVICE_ID
+        command: step
+        cluster_id: 8
+    action_logic: |
+      step_mode = 0 → brightness UP (step_size / 2)%
+      step_mode = 1 → brightness DOWN -(step_size / 2)%
+
+  color_temp_control:
+    description: "Color temperature via press+rotate"
+    trigger:
+      platform: event
+      event_type: zha_event
+      event_data:
+        device_id: YOUR_DEVICE_ID
+        command: step_color_temp
+        cluster_id: 768
+    action_logic: |
+      step_mode = 1 → warmer (increase mireds by step_size)
+      step_mode = 3 → cooler (decrease mireds by step_size)
+
+  button_toggle:
+    description: "Toggle light with single press"
+    trigger:
+      platform: event
+      event_type: zha_event
+      event_data:
+        device_id: YOUR_DEVICE_ID
+        command: remote_button_short_press
+
+# Critical notes for implementers
+implementation_notes:
+  - "ALWAYS use Mode 1 for dimmer control - Mode 2 breaks cluster 8 events"
+  - "Rotation (cluster 8) and press+rotate (cluster 768) use DIFFERENT clusters"
+  - "step_size varies with rotation speed - use relative brightness_step_pct"
+  - "step_mode values differ between cluster 8 (0/1) and cluster 768 (1/3)"
+  - "Each slow rotation notch generates 3 events; fast rotation accumulates into fewer, larger events"
+  - "Press+rotate is intended for color control, not dimming"
+  - "Triple-click mode switch is easily triggered accidentally - consider mode detection in automations"
+
+# Cluster reference
+clusters:
+  6:
+    name: OnOff
+    purpose: "Button events and rotation direction indicators"
+  8:
+    name: LevelControl
+    purpose: "Brightness dimming commands (Mode 1 rotation only)"
+  768:
+    name: ColorControl
+    purpose: "Color temperature and hue commands (press+rotate)"

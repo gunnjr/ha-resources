@@ -161,3 +161,18 @@ As the repo evolves:
 
 This way, the repo can grow organically without constant top-level surgery.
 
+
+---
+
+## 7. Naming Decisions and Conventions
+
+### Tools vs Scripts
+**Decision:** Use `tools/` instead of `scripts/` to avoid confusion.
+- In Home Assistant, "scripts" refers to YAML automation sequences
+- This repo contains shell scripts and utilities for managing HA
+- Using `tools/` with subdirectories keeps it clear and organized:
+  - `tools/zigbee/` - ZHA and Zigbee device tools
+  - `tools/logging/` - Log capture and analysis
+  - `tools/device-testing/` - Device-specific test scripts
+  - `tools/ha-core/` - General HA management utilities
+

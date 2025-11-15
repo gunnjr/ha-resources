@@ -1,0 +1,337 @@
+blueprint:
+  name: ZHA - Tuya TS004F Smart Knob - Enhanced (Mode-Aware)
+
+  description: >-
+    **Enhanced TS004F rotary knob automation with proper mode detection.**
+
+
+    This blueprint provides complete control for the Tuya TS004F rotary knob in Home Assistant ZHA.
+
+
+    **IMPORTANT:** The device has two modes controlled by triple-clicking:
+
+    - **Mode 1 (Default - Recommended):** Full dimming support via cluster 8 step commands
+
+    - **Mode 2 (Event/Scene):** NO dimming support - only direction events
+
+
+    **Recommendation:** Keep device in Mode 1 and use this blueprint's built-in actions.
+
+
+    **Features:**
+
+    - Automatic brightness dimming with speed detection (accounts for rotation speed)
+
+    - Color temperature control (press + rotate, with safe bounds checking)
+
+    - Customizable button actions (single, double, long press)
+
+    - Optional auto-toggle on single press
+
+    - Mode switch detection with notifications
+
+    - Works with multiple TS004F manufacturer variants (_TZ3000_4fjiwweb, _TZ3000_qja6nq5z, etc.)
+
+
+    **Device Behavior Notes:**
+
+    - Single press generates a "toggle" command (~250ms after button press)
+
+    - Double press generates an "on" command instead of toggle
+
+    - Long press triggers color control commands (move_hue, move_saturation)
+
+    - Press + rotate uses cluster 768 (color temp), not cluster 8 (brightness)
+
+    - Mode 2 disables ALL cluster 8 events (breaks dimming completely)
+
+
+    Based on comprehensive 147-event analysis. See full documentation: https://github.com/gunnjr/ha-resources
+
+  domain: automation
+
+  source_url: https://github.com/gunnjr/ha-resources/examples/enhanced-blueprint.yaml
+
+  input:
+    # Device Selection
+    remote:
+      name: TS004F Rotary Knob
+      description: Select your TS004F device (works with all manufacturer variants)
+      selector:
+        device:
+          integration: zha
+          model: TS004F
+
+    # Mode 1: Dimming Target
+    dimmer_light:
+      name: Light for Brightness Control
+      description: "Light to control with rotation (Mode 1 - cluster 8 step commands)"
+      selector:
+        target:
+          entity:
+            domain: light
+      default: {}
+
+    # Mode 1: Color Temp Target
+    color_temp_light:
+      name: Light for Color Temperature Control
+      description: "Light to control with press + rotate (cluster 768)"
+      selector:
+        target:
+          entity:
+            domain: light
+      default: {}
+
+    # Button Actions
+    button_single_press:
+      name: Single Press Action
+      description: "Action to perform on single button press"
+      selector:
+        action:
+      default: []
+
+    button_double_press:
+      name: Double Press Action
+      description: "Action to perform on double button press"
+      selector:
+        action:
+      default: []
+
+    button_long_press:
+      name: Long Press Action
+      description: "Action to perform on long button press"
+      selector:
+        action:
+      default: []
+
+    # Auto-Toggle Feature
+    auto_toggle_single_press:
+      name: Auto-Toggle on Single Press
+      description: "Automatically toggle the dimmer light when single-pressing the button (happens ~250ms after button press)"
+      default: false
+      selector:
+        boolean:
+
+    # Mode Switch Notification
+    notify_mode_switch:
+      name: Notify on Mode Switch
+      description: "Send notification when device switches modes (triple-click detection)"
+      default: false
+      selector:
+        boolean:
+
+    notification_service:
+      name: Notification Service
+      description: "Service to use for mode switch notifications (e.g., notify.mobile_app_phone)"
+      default: "notify.notify"
+      selector:
+        text:
+
+    # Advanced Settings
+    brightness_step_multiplier:
+      name: Brightness Step Multiplier
+      description: "Adjust dimming speed (1.0 = normal, 0.5 = half speed, 2.0 = double speed)"
+      default: 1.0
+      selector:
+        number:
+          min: 0.1
+          max: 5.0
+          step: 0.1
+          mode: slider
+
+    mode:
+      name: Automation Mode
+      description: "https://www.home-assistant.io/docs/automation/modes/"
+      default: restart
+      selector:
+        select:
+          mode: dropdown
+          options:
+            - single
+            - restart
+            - queued
+            - parallel
+
+mode: !input mode
+max_exceeded: silent
+
+trigger:
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_id: !input remote
+
+action:
+  - variables:
+      command: "{{ trigger.event.data.command }}"
+      cluster_id: "{{ trigger.event.data.cluster_id }}"
+      endpoint_id: "{{ trigger.event.data.endpoint_id }}"
+      params: "{{ trigger.event.data.params }}"
+      args: "{{ trigger.event.data.args | default([]) }}"
+
+      # Extract rotation parameters from cluster 8 step commands
+      step_mode: "{{ params.step_mode if params.step_mode is defined else -1 }}"
+      step_size: "{{ params.step_size if params.step_size is defined else 0 }}"
+      transition_time: "{{ params.transition_time if params.transition_time is defined else 2 }}"
+
+      # Calculate brightness change (step_size / 2 = reasonable percentage)
+      brightness_multiplier: !input brightness_step_multiplier
+      brightness_change: >-
+        {{ (step_size / 2 * brightness_multiplier) | round(0) }}
+
+      # Map transition_time to actual speed
+      # 1 = fast (0.3s), 2 = moderate (0.5s), 3 = slow (0.8s)
+      transition_speed: >-
+        {% if transition_time == 1 %} 0.3
+        {% elif transition_time == 2 %} 0.5
+        {% elif transition_time == 3 %} 0.8
+        {% else %} 0.5
+        {% endif %}
+
+      # Color temp step_mode: 1 = warmer, 3 = cooler
+      color_step_mode: "{{ params.step_mode if command == 'step_color_temp' else -1 }}"
+      color_step_size: "{{ params.step_size if command == 'step_color_temp' else 0 }}"
+
+  - choose:
+
+    # ============================================
+    # MODE 1: BRIGHTNESS DIMMING (Cluster 8)
+    # ============================================
+
+    - conditions:
+        - "{{ command == 'step' }}"
+        - "{{ cluster_id == 8 }}"
+        - "{{ endpoint_id == 1 }}"
+        - "{{ step_mode == 0 }}"  # Rotate RIGHT = brightness UP
+      sequence:
+        - service: light.turn_on
+          target: !input dimmer_light
+          data:
+            brightness_step_pct: "{{ brightness_change }}"
+            transition: "{{ transition_speed }}"
+
+    - conditions:
+        - "{{ command == 'step' }}"
+        - "{{ cluster_id == 8 }}"
+        - "{{ endpoint_id == 1 }}"
+        - "{{ step_mode == 1 }}"  # Rotate LEFT = brightness DOWN
+      sequence:
+        - service: light.turn_on
+          target: !input dimmer_light
+          data:
+            brightness_step_pct: "{{ -brightness_change }}"
+            transition: "{{ transition_speed }}"
+
+    # ============================================
+    # PRESS + ROTATE: COLOR TEMPERATURE (Cluster 768)
+    # ============================================
+
+    - conditions:
+        - "{{ command == 'step_color_temp' }}"
+        - "{{ cluster_id == 768 }}"
+        - "{{ endpoint_id == 1 }}"
+        - "{{ color_step_mode == 1 }}"  # Rotate RIGHT = warmer (increase mireds)
+      sequence:
+        - service: light.turn_on
+          target: !input color_temp_light
+          data:
+            color_temp: >-
+              {% set current = state_attr(color_temp_light.entity_id, 'color_temp') | default(300) %}
+              {% set new_temp = current + color_step_size %}
+              {{ [153, [new_temp, 500] | min] | max }}
+            transition: "{{ transition_speed }}"
+
+    - conditions:
+        - "{{ command == 'step_color_temp' }}"
+        - "{{ cluster_id == 768 }}"
+        - "{{ endpoint_id == 1 }}"
+        - "{{ color_step_mode == 3 }}"  # Rotate LEFT = cooler (decrease mireds)
+      sequence:
+        - service: light.turn_on
+          target: !input color_temp_light
+          data:
+            color_temp: >-
+              {% set current = state_attr(color_temp_light.entity_id, 'color_temp') | default(300) %}
+              {% set new_temp = current - color_step_size %}
+              {{ [153, [new_temp, 500] | min] | max }}
+            transition: "{{ transition_speed }}"
+
+    # ============================================
+    # BUTTON ACTIONS
+    # ============================================
+
+    - conditions:
+        - "{{ command == 'remote_button_short_press' }}"
+        - "{{ cluster_id == 6 }}"
+      sequence: !input button_single_press
+
+    - conditions:
+        - "{{ command == 'remote_button_double_press' }}"
+        - "{{ cluster_id == 6 }}"
+      sequence: !input button_double_press
+
+    - conditions:
+        - "{{ command == 'remote_button_long_press' }}"
+        - "{{ cluster_id == 6 }}"
+      sequence: !input button_long_press
+
+    # ============================================
+    # AUTO-TOGGLE (Optional)
+    # ============================================
+    # The device generates a "toggle" command ~250ms after single press
+    # This can optionally trigger an automatic toggle of the dimmer light
+
+    - conditions:
+        - "{{ command == 'toggle' }}"
+        - "{{ cluster_id == 6 }}"
+        - "{{ endpoint_id == 1 }}"
+        - !input auto_toggle_single_press
+      sequence:
+        - service: light.toggle
+          target: !input dimmer_light
+
+    # ============================================
+    # MODE SWITCH DETECTION (Triple-Click)
+    # ============================================
+
+    - conditions:
+        - "{{ command == 'attribute_updated' }}"
+        - "{{ cluster_id == 6 }}"
+        - "{{ args.attribute_name is defined and args.attribute_name == 'switch_mode' }}"
+        - !input notify_mode_switch
+      sequence:
+        - choose:
+          - conditions:
+              - "{{ args.value == 1 }}"
+            sequence:
+              - service: !input notification_service
+                data:
+                  title: "⚠️ TS004F Mode Switch"
+                  message: >-
+                    Device switched to Mode 2 (Event/Scene).
+
+                    WARNING: Brightness dimming is now DISABLED!
+
+                    Triple-click again to return to Mode 1 for dimming support.
+          - conditions:
+              - "{{ args.value == 0 }}"
+            sequence:
+              - service: !input notification_service
+                data:
+                  title: "✅ TS004F Mode Switch"
+                  message: >-
+                    Device returned to Mode 1 (Command/Dimmer).
+
+                    Brightness dimming is now enabled.
+
+    # ============================================
+    # FALLBACK: Log unexpected events
+    # ============================================
+    default:
+      - service: system_log.write
+        data:
+          message: >-
+            TS004F Blueprint: Unhandled event -
+            command={{ command }}, cluster={{ cluster_id }},
+            params={{ params }}
+          level: debug
