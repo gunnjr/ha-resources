@@ -9,11 +9,11 @@ Control lights with the TS004F rotary knob. Works with all manufacturer variants
 **Home Assistant Blueprint Import:**
 
 ```
-https://github.com/gunnjr/ha-resources/blob/main/ha-assets/quirks/blueprints/tuya-ts004f/ts004f-enhanced.yaml
+https://github.com/gunnjr/ha-resources/blob/main/ha-assets/blueprints/tuya-ts004f/ts004f-enhanced.yaml
 ```
 
 Or use the My Home Assistant link:
-[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/gunnjr/ha-resources/blob/main/ha-assets/quirks/blueprints/tuya-ts004f/ts004f-enhanced.yaml)
+[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https://github.com/gunnjr/ha-resources/blob/main/ha-assets/blueprints/tuya-ts004f/ts004f-enhanced.yaml)
 
 ---
 
@@ -148,7 +148,7 @@ See [detailed comparison](blueprint-comparison.md)
 
 Want to understand how this device really works?
 
-📖 **[Complete Device Research](../../../../research/zigbee/devices/tuya-ts004f/)**
+📖 **[Complete Device Research](../../../research/zigbee/devices/tuya-ts004f/)**
 
 Includes:
 - Comprehensive event catalog (147 events analyzed!)
@@ -210,4 +210,4 @@ MIT License - Use freely with attribution
 
 ---
 
-**Built with comprehensive device analysis** | [View Research](../../../../research/zigbee/devices/tuya-ts004f/)
+**Built with comprehensive device analysis** | [View Research](../../../research/zigbee/devices/tuya-ts004f/)

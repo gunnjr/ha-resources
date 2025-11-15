@@ -135,7 +135,7 @@ When adding tools:
 ## Related Documentation
 
 - **Device Research:** [zigbee/devices/](../research/zigbee/devices/)
-- **Blueprints:** [blueprints/](../ha-assets/quirks/blueprints/)
+- **Blueprints:** [blueprints/](../ha-assets/blueprints/)
 - **Build Plan:** [BUILD_PLAN.md](../BUILD_PLAN.md)
 
 ---

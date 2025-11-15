@@ -4,7 +4,7 @@ Personal collection of Home Assistant blueprints, Zigbee device research, and ut
 
 ## Contents
 
-- **[Blueprints](ha-assets/quirks/blueprints/)** - Automation blueprints for various devices
+- **[Blueprints](ha-assets/blueprints/)** - Automation blueprints for various devices
 - **[Zigbee Devices](research/zigbee/devices/)** - Device research, quirks, and documentation
 - **[Tools](tools/)** - Shell scripts and utilities for HA management
 - **[Docs](docs/)** - Guides, references, and build plans
@@ -18,13 +18,13 @@ See individual directories for detailed documentation.
 ### Tuya TS004F Rotary Knob
 Enhanced blueprint with comprehensive device research based on 147 captured events.
 
-- **Blueprint:** [ha-assets/quirks/blueprints/tuya-ts004f/](ha-assets/quirks/blueprints/tuya-ts004f/)
+- **Blueprint:** [ha-assets/blueprints/tuya-ts004f/](ha-assets/blueprints/tuya-ts004f/)
 - **Research:** [research/zigbee/devices/tuya-ts004f/](research/zigbee/devices/tuya-ts004f/)
 - **Key Features:** Mode detection, speed-aware dimming, color temperature control
 
 **Quick Import:**
 ```
-https://github.com/gunnjr/ha-resources/blob/main/ha-assets/quirks/blueprints/tuya-ts004f/ts004f-enhanced.yaml
+https://github.com/gunnjr/ha-resources/blob/main/ha-assets/blueprints/tuya-ts004f/ts004f-enhanced.yaml
 ```
 
 ---

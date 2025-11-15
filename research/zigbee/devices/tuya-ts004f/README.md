@@ -9,14 +9,14 @@ Complete analysis of the TS004F rotary knob based on 147 captured ZHA events acr
 ### Research Documents
 - **[Event Catalog](research/ts004f-event-catalog.md)** - Detailed analysis of all 15 actions with automation examples
 - **[Event Mapping (YAML)](research/ts004f-event-mapping.yaml)** - Structured machine-readable reference
-- **[Event Coverage Audit](../../ha-assets/quirks/blueprints/tuya-ts004f/event-coverage-audit.md)** - Blueprint completeness analysis
-- **[Blueprint Comparison](../../ha-assets/quirks/blueprints/tuya-ts004f/blueprint-comparison.md)** - Analysis vs community versions
+- **[Event Coverage Audit](../../../../ha-assets/blueprints/tuya-ts004f/event-coverage-audit.md)** - Blueprint completeness analysis
+- **[Blueprint Comparison](../../../../ha-assets/blueprints/tuya-ts004f/blueprint-comparison.md)** - Analysis vs community versions
 
 ### Captured Data
 - **[Example Log](captured-logs/example-capture.log)** - Raw event capture from test session
 
 ### Ready-to-Use
-- **[Enhanced Blueprint](../../ha-assets/quirks/blueprints/tuya-ts004f/)** - Production-ready automation blueprint
+- **[Enhanced Blueprint](../../../../ha-assets/blueprints/tuya-ts004f/)** - Production-ready automation blueprint
 
 ---
 
@@ -124,7 +124,7 @@ Rotation generates 3 events:
 - **Date:** 2025-11-15
 - **Events Captured:** 147 total
 - **Actions Tested:** 15 distinct physical interactions
-- **Test Script:** [capture_ts004f_events.sh](../../tools/zigbee/capture_ts004f_events.sh)
+- **Test Script:** [capture_ts004f_events.sh](../../../../tools/zigbee/capture_ts004f_events.sh)
 
 ### Actions Tested
 1. Single click
@@ -255,7 +255,7 @@ value: "{{ trigger.event.data.params.step_size / 2 }}"
 ## Tools
 
 ### Event Capture Script
-[capture_ts004f_events.sh](../../tools/zigbee/capture_ts004f_events.sh)
+[capture_ts004f_events.sh](../../../../tools/zigbee/capture_ts004f_events.sh)
 
 Interactive script that:
 - Guides user through 15 test actions
@@ -264,7 +264,7 @@ Interactive script that:
 - Outputs timestamped event log
 
 ### Log Formatter
-[ha_zigbee_logfmt.sh](../../tools/zigbee/ha_zigbee_logfmt.sh)
+[ha_zigbee_logfmt.sh](../../../../tools/zigbee/ha_zigbee_logfmt.sh)
 
 Formats raw HA logs into readable ZHA event format.
 
@@ -272,7 +272,7 @@ Formats raw HA logs into readable ZHA event format.
 
 ## Related Resources
 
-- **[Enhanced Blueprint](../../ha-assets/quirks/blueprints/tuya-ts004f/)** - Ready-to-use automation
+- **[Enhanced Blueprint](../../../../ha-assets/blueprints/tuya-ts004f/)** - Ready-to-use automation
 - **[Home Assistant Community Post]** - Coming soon
 - **[GitHub Issues](https://github.com/gunnjr/ha-resources/issues)** - Bug reports & questions
 
