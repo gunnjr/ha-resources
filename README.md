@@ -1,46 +1,39 @@
 # Home Assistant Resources
 
-Personal collection of Home Assistant blueprints, Zigbee device research, and utility tools.
+A collection of Home Assistant blueprints, Zigbee device research, and utility tools. This repository exists because I often create resources for my own setup that others might find helpful—so I’m sharing them here. Some items are polished, others are exploratory, but all are provided openly in case they’re useful.
 
-## Contents
-
-- **[Blueprints](ha-assets/blueprints/)** - Automation blueprints for various devices
-- **[Zigbee Devices](research/zigbee/devices/)** - Device research, quirks, and documentation
-- **[Tools](tools/)** - Shell scripts and utilities for HA management
-- **[Docs](docs/)** - Guides, references, and build plans
-
-See individual directories for detailed documentation.
+Contributions, fixes, and improvements are welcome.
 
 ---
 
-## Featured Content
+## Repository Structure
 
-### Tuya TS004F Rotary Knob
-Enhanced blueprint with comprehensive device research based on 147 captured events.
+This repo follows a **self-documenting** layout. Each top-level directory includes its own README or explanatory files.
 
-- **Blueprint:** [ha-assets/blueprints/tuya-ts004f/](ha-assets/blueprints/tuya-ts004f/)
-- **Research:** [research/zigbee/devices/tuya-ts004f/](research/zigbee/devices/tuya-ts004f/)
-- **Key Features:** Mode detection, speed-aware dimming, color temperature control
+- **[ha-assets/](ha-assets/)** – Blueprints, quirks, and other Home Assistant artifacts intended for direct use.
+- **[research/](research/)** – Device research, behavior analysis, logs, reverse‑engineering notes, and supporting documentation.
+- **[tools/](tools/)** – Utility scripts for testing, logging, Zigbee event capture, repository maintenance, and other workflows.
+- **[docs/](docs/)** – Guides, references, design documents, and build plans.
 
-**Quick Import:**
-```
-https://github.com/gunnjr/ha-resources/blob/main/ha-assets/blueprints/tuya-ts004f/ts004f-enhanced.yaml
-```
+See each directory’s README for details.
 
 ---
 
-## Repository Philosophy
+## Philosophy
 
-This repo follows a **self-documenting structure** where directory names and local README files explain their contents. This keeps the main README stable and avoids massive tables that require constant updates.
+The repo is organized to minimize churn. Files live where they make the most sense, and folder-level documentation explains the rest. This keeps the top-level README short and evergreen.
 
-See [BUILD_PLAN.md](BUILD_PLAN.md) for the design philosophy and build-out plan.
+See **[BUILD_PLAN.md](docs/BUILD_PLAN.md)** for the full design philosophy.
+
 
 ---
 
 ## Contributing
 
-This is primarily a personal repository for sharing Home Assistant work with the community. Pull requests welcome for fixes and improvements!
+PRs are welcome—especially fixes, improvements, and documentation updates. If something here helped you, feel free to contribute back.
+
+---
 
 ## License
 
-MIT - Use freely with attribution
+MIT — use freely with attribution.
