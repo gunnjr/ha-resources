@@ -226,6 +226,8 @@ action:
       notify_enabled: !input notify_mode_switch
       mode_sensor_entity: !input mode_sensor
 
+
+    
   - choose:
 
     # ============================================
@@ -323,6 +325,20 @@ action:
       sequence:
         - service: light.toggle
           target: !input dimmer_light
+
+
+    # Temporary debug logging
+    - conditions:
+        - "{{ command == 'attribute_updated' }}"
+        - "{{ cluster_id == 6 }}"
+      sequence:
+        - service: system_log.write
+          data:
+            message: >-
+              DEBUG: args type={{ args.__class__.__name__ if args is defined else 'UNDEFINED' }},
+              args value={{ args }},
+              has attribute_name={{ 'attribute_name' in args if args is mapping else 'NOT A MAPPING' }}
+            level: warning
 
     # ============================================
     # MODE SWITCH DETECTION (Triple-Click)
