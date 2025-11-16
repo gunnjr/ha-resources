@@ -196,7 +196,7 @@ action:
       cluster_id: "{{ trigger.event.data.cluster_id }}"
       endpoint_id: "{{ trigger.event.data.endpoint_id }}"
       params: "{{ trigger.event.data.params }}"
-      args: "{{ trigger.event.data.args | default([]) }}"
+      args: "{{ trigger.event.data.args | default({}) }}"
 
       # Extract rotation parameters from cluster 8 step commands
       step_mode: "{{ params.step_mode if params.step_mode is defined else -1 }}"
@@ -331,12 +331,12 @@ action:
     - conditions:
         - "{{ command == 'attribute_updated' }}"
         - "{{ cluster_id == 6 }}"
-        - "{{ args|length > 0 and args[0].attribute_name == 'switch_mode' }}"
+        - "{{ args.attribute_name is defined and args.attribute_name == 'switch_mode' }}"
       sequence:
         - choose:
           # Switched to Scene Control Mode (args.value = 1)
           - conditions:
-              - "{{ args[0].value == 1 }}"
+              - "{{ args.value == 1 }}"
             sequence:
               # Update mode sensor if provided
               - if:
@@ -364,7 +364,7 @@ action:
 
           # Returned to Dimmer Mode (args.value = 0)
           - conditions:
-              - "{{ args[0].value == 0 }}"
+              - "{{ args.value == 0 }}"
             sequence:
               # Update mode sensor if provided
               - if:
