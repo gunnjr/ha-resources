@@ -222,7 +222,7 @@ action:
 
       # Extract attribute_updated parameters
       updated_attrib_name: "{{ trigger.event.data.args.attribute_name if command == 'attribute_updated' else '' }}"
-      updated_attrib_value: "{{ trigger.event.data.args.value if command == 'attribute_updated' else -1 }}"
+      updated_attrib_value: "{{ (trigger.event.data.args.value | int) if command == 'attribute_updated' else -1 }}"
 
       # Boolean input variables for use in conditions
       auto_toggle_enabled: !input auto_toggle_single_press
