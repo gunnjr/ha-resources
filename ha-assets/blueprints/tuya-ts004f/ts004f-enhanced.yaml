@@ -331,12 +331,12 @@ action:
     - conditions:
         - "{{ command == 'attribute_updated' }}"
         - "{{ cluster_id == 6 }}"
-        - "{{ args.attribute_name is defined and args.attribute_name == 'switch_mode' }}"
+        - "{{ args|length > 0 and args[0].attribute_name == 'switch_mode' }}"
       sequence:
         - choose:
           # Switched to Scene Control Mode (args.value = 1)
           - conditions:
-              - "{{ args.value == 1 }}"
+              - "{{ args[0].value == 1 }}"
             sequence:
               # Update mode sensor if provided
               - if:
@@ -364,7 +364,7 @@ action:
 
           # Returned to Dimmer Mode (args.value = 0)
           - conditions:
-              - "{{ args.value == 0 }}"
+              - "{{ args[0].value == 0 }}"
             sequence:
               # Update mode sensor if provided
               - if:
