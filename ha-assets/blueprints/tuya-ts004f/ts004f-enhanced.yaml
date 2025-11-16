@@ -236,9 +236,24 @@ action:
   - choose:
 
     # ============================================
+    # DEBUG: Log all events (set logger to info/debug to see)
+    # ============================================
+    - conditions:
+        - "{{ true }}"  # Always logs every event
+      sequence:
+        - service: system_log.write
+          data:
+            message: >-
+              TS004F Event: cmd={{ command }}, cluster={{ cluster_id }}, 
+              ep={{ endpoint_id }}, step_mode={{ step_mode }}, 
+              step_size={{ step_size }}, trans={{ transition_time }},
+              color_mode={{ color_step_mode }}, color_size={{ color_step_size }},
+              attrib={{ updated_attrib_name }}, val={{ updated_attrib_value }}
+            level: info
+
+    # ============================================
     # MODE 1: BRIGHTNESS DIMMING (Cluster 8)
     # ============================================
-
     - conditions:
         - "{{ command == 'step' }}"
         - "{{ cluster_id == 8 }}"
@@ -396,6 +411,66 @@ action:
                         Brightness dimming is now enabled.
 
     # ============================================
+    # EXPECTED BUT IGNORED EVENTS
+    # ============================================
+    # rotate left and right generate 'rotate-type' and direction-specific ('left'/'right') commnands we don't handle
+    - conditions:
+        - "{{ command in ['rotate_type', 'left', 'right'] }}"
+      sequence:
+        - service: system_log.write
+          data:
+            message: "TS004F: Ignoring unneeded rotate command={{ command }}"
+            level: debug
+
+    # Long press generates color control commands we don't handle
+    - conditions:
+        - "{{ command in ['move_hue', 'move_saturation', 'stop_move_step'] }}"
+      sequence:
+        - service: system_log.write
+          data:
+            message: "TS004F: Ignoring long-press color command={{ command }}"
+            level: debug
+
+    # Button press (short, double, and long) events generate multiple commands
+    - conditions:
+        - "{{ command == 'press_type' }}"
+      sequence:
+        - service: system_log.write
+          data:
+            message: "TS004F: Ignoring press_type (redundant with remote_button_* events)"
+            level: debug
+
+    # Double press generates 'on' command
+    - conditions:
+        - "{{ command == 'on' }}"
+        - "{{ cluster_id == 6 }}"
+      sequence:
+        - service: system_log.write
+          data:
+            message: "TS004F: Ignoring 'on' from double press (handled by remote_button_double_press)"
+            level: debug
+
+    # Toggle command (handled by auto_toggle_single_press if enabled, otherwise ignored)
+    - conditions:
+        - "{{ command == 'toggle' }}"
+        - "{{ not auto_toggle_enabled }}"
+      sequence:
+        - service: system_log.write
+          data:
+            message: "TS004F: Ignoring toggle (auto_toggle disabled)"
+            level: debug
+
+    # Ignore non-switch_mode attribute updates
+    - conditions:
+        - "{{ command == 'attribute_updated' }}"
+        - "{{ updated_attrib_name != 'switch_mode' and updated_attrib_name != '' }}"
+      sequence:
+        - service: system_log.write
+          data:
+            message: "TS004F: Ignoring attribute_updated for {{ updated_attrib_name }}"
+            level: debug
+
+    # ============================================
     # FALLBACK: Log unexpected events
     # ============================================
     default:
@@ -405,4 +480,4 @@ action:
             TS004F Blueprint: Unhandled event -
             command={{ command }}, cluster={{ cluster_id }},
             params={{ trigger.event.data.params }}
-          level: debug
+          level: warning
