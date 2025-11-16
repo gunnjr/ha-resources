@@ -195,12 +195,14 @@ action:
       command: "{{ trigger.event.data.command }}"
       cluster_id: "{{ trigger.event.data.cluster_id }}"
       endpoint_id: "{{ trigger.event.data.endpoint_id }}"
-      params: "{{ trigger.event.data.params }}"
 
       # Extract rotation parameters from cluster 8 step commands
-      step_mode: "{{ params.step_mode if params.step_mode is defined else -1 }}"
-      step_size: "{{ params.step_size if params.step_size is defined else 0 }}"
-      transition_time: "{{ params.transition_time if params.transition_time is defined else 2 }}"
+      step_mode: "{{ (trigger.event.data.params.step_mode | int) if command == 'step' else -1 }}"
+      step_size: "{{ trigger.event.data.params.step_size if command == 'step' else 0 }}"
+      transition_time: "{{ trigger.event.data.params.transition_time if trigger.event.data.params.transition_time is defined else 2 }}"
+
+
+
 
       # Calculate brightness change (step_size / 2 = reasonable percentage)
       brightness_multiplier: !input brightness_step_multiplier
@@ -217,9 +219,9 @@ action:
         {% endif %}
 
       # Color temp step_mode: 1 = warmer, 3 = cooler
-      color_step_mode: "{{ params.step_mode if command == 'step_color_temp' else -1 }}"
-      color_step_size: "{{ params.step_size if command == 'step_color_temp' else 0 }}"
-
+      color_step_mode: "{{ (trigger.event.data.params.step_mode | int) if command == 'step_color_temp' else -1 }}"
+      color_step_size: "{{ trigger.event.data.params.step_size if command == 'step_color_temp' else 0 }}"
+      
       # Extract attribute_updated parameters
       updated_attrib_name: "{{ trigger.event.data.args.attribute_name if command == 'attribute_updated' else '' }}"
       updated_attrib_value: "{{ (trigger.event.data.args.value | int) if command == 'attribute_updated' else -1 }}"
@@ -402,5 +404,5 @@ action:
           message: >-
             TS004F Blueprint: Unhandled event -
             command={{ command }}, cluster={{ cluster_id }},
-            params={{ params }}
+            params={{ trigger.event.data.params }}
           level: debug
