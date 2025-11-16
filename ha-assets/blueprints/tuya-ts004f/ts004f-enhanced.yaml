@@ -231,8 +231,16 @@ action:
       notify_enabled: !input notify_mode_switch
       mode_sensor_entity: !input mode_sensor
 
+  - service: system_log.write
+    data:
+      message: >-
+        TS004F Event: cmd={{ command }}, cluster={{ cluster_id }}, 
+        ep={{ endpoint_id }}, step_mode={{ step_mode }}, 
+        step_size={{ step_size }}, trans={{ transition_time }},
+        color_mode={{ color_step_mode }}, color_size={{ color_step_size }},
+        attrib={{ updated_attrib_name }}, val={{ updated_attrib_value }}
+      level: info
 
-    
   - choose:
 
     # ============================================
