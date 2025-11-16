@@ -196,7 +196,6 @@ action:
       cluster_id: "{{ trigger.event.data.cluster_id }}"
       endpoint_id: "{{ trigger.event.data.endpoint_id }}"
       params: "{{ trigger.event.data.params }}"
-      args: "{{ trigger.event.data.args | default({}) }}"
 
       # Extract rotation parameters from cluster 8 step commands
       step_mode: "{{ params.step_mode if params.step_mode is defined else -1 }}"
@@ -220,6 +219,10 @@ action:
       # Color temp step_mode: 1 = warmer, 3 = cooler
       color_step_mode: "{{ params.step_mode if command == 'step_color_temp' else -1 }}"
       color_step_size: "{{ params.step_size if command == 'step_color_temp' else 0 }}"
+
+      # Extract attribute_updated parameters
+      updated_attrib_name: "{{ trigger.event.data.args.attribute_name if command == 'attribute_updated' else '' }}"
+      updated_attrib_value: "{{ trigger.event.data.args.value if command == 'attribute_updated' else -1 }}"
 
       # Boolean input variables for use in conditions
       auto_toggle_enabled: !input auto_toggle_single_press
@@ -326,20 +329,6 @@ action:
         - service: light.toggle
           target: !input dimmer_light
 
-
-    # Temporary debug logging
-    - conditions:
-        - "{{ command == 'attribute_updated' }}"
-        - "{{ cluster_id == 6 }}"
-      sequence:
-        - service: system_log.write
-          data:
-            message: >-
-              DEBUG: args type={{ args.__class__.__name__ if args is defined else 'UNDEFINED' }},
-              args value={{ args }},
-              has attribute_name={{ 'attribute_name' in args if args is mapping else 'NOT A MAPPING' }}
-            level: warning
-
     # ============================================
     # MODE SWITCH DETECTION (Triple-Click)
     # ============================================
@@ -347,12 +336,12 @@ action:
     - conditions:
         - "{{ command == 'attribute_updated' }}"
         - "{{ cluster_id == 6 }}"
-        - "{{ args.attribute_name is defined and args.attribute_name == 'switch_mode' }}"
+        - "{{ updated_attrib_name == 'switch_mode' }}"
       sequence:
         - choose:
           # Switched to Scene Control Mode (args.value = 1)
           - conditions:
-              - "{{ args.value == 1 }}"
+              - "{{ updated_attrib_value == 1 }}"
             sequence:
               # Update mode sensor if provided
               - if:
@@ -380,7 +369,7 @@ action:
 
           # Returned to Dimmer Mode (args.value = 0)
           - conditions:
-              - "{{ args.value == 0 }}"
+              - "{{ updated_attrib_value == 0 }}"
             sequence:
               # Update mode sensor if provided
               - if:
