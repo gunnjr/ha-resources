@@ -10,12 +10,12 @@ blueprint:
 
     **IMPORTANT:** The device has two modes controlled by triple-clicking:
 
-    - **Mode 1 (Default - Recommended):** Full dimming support via cluster 8 step commands
+    - **Dimmer Mode (Recommended):** Full dimming support via cluster 8 step commands
 
-    - **Mode 2 (Event/Scene):** NO dimming support - only direction events
+    - **Scene Control Mode:** NO dimming support - only direction events
 
 
-    **Recommendation:** Keep device in Mode 1 and use this blueprint's built-in actions.
+    **Recommendation:** Keep device in Dimmer Mode and use this blueprint's built-in actions.
 
 
     **Features:**
@@ -28,7 +28,7 @@ blueprint:
 
     - Optional auto-toggle on single press
 
-    - Mode switch detection with notifications
+    - Mode switch detection with optional tracking and notifications
 
     - Works with multiple TS004F manufacturer variants (_TZ3000_4fjiwweb, _TZ3000_qja6nq5z, etc.)
 
@@ -43,14 +43,14 @@ blueprint:
 
     - Press + rotate uses cluster 768 (color temp), not cluster 8 (brightness)
 
-    - Mode 2 disables ALL cluster 8 events (breaks dimming completely)
+    - Scene Control Mode disables ALL cluster 8 events (breaks dimming completely)
 
 
-    Based on comprehensive 147-event analysis. See full documentation: https://github.com/gunnjr/ha-resources
+    Based on comprehensive 147-event analysis. See full documentation: https://github.com/YOUR_REPO
 
   domain: automation
 
-  source_url: https://github.com/gunnjr/ha-resources/examples/enhanced-blueprint.yaml
+  source_url: https://github.com/YOUR_REPO/examples/enhanced-blueprint.yaml
 
   input:
     # Device Selection
@@ -127,6 +127,35 @@ blueprint:
       selector:
         text:
 
+    mode_sensor:
+      name: Mode Status Tracker (Optional)
+      description: >-
+        Optional: Select an input_select helper to track which mode the device is in.
+
+
+        **First-time setup:**
+
+        1. Go to Settings → Devices & Services → Helpers
+
+        2. Click "+ Create Helper" → Dropdown
+
+        3. Name it (e.g., "TS004F Mode Status")
+
+        4. Add these TWO options with exact text:
+           - Dimmer Mode
+           - Scene Control Mode
+
+        5. Set initial value to "Dimmer Mode"
+
+        6. Save, then return here and select it
+
+
+        The automation will update this helper when you triple-click to switch modes.
+      selector:
+        entity:
+          domain: input_select
+      default: {}
+
     # Advanced Settings
     brightness_step_multiplier:
       name: Brightness Step Multiplier
@@ -191,6 +220,11 @@ action:
       # Color temp step_mode: 1 = warmer, 3 = cooler
       color_step_mode: "{{ params.step_mode if command == 'step_color_temp' else -1 }}"
       color_step_size: "{{ params.step_size if command == 'step_color_temp' else 0 }}"
+
+      # Boolean input variables for use in conditions
+      auto_toggle_enabled: !input auto_toggle_single_press
+      notify_enabled: !input notify_mode_switch
+      mode_sensor_entity: !input mode_sensor
 
   - choose:
 
@@ -285,7 +319,7 @@ action:
         - "{{ command == 'toggle' }}"
         - "{{ cluster_id == 6 }}"
         - "{{ endpoint_id == 1 }}"
-        - !input auto_toggle_single_press
+        - "{{ auto_toggle_enabled }}"
       sequence:
         - service: light.toggle
           target: !input dimmer_light
@@ -298,31 +332,61 @@ action:
         - "{{ command == 'attribute_updated' }}"
         - "{{ cluster_id == 6 }}"
         - "{{ args.attribute_name is defined and args.attribute_name == 'switch_mode' }}"
-        - !input notify_mode_switch
       sequence:
         - choose:
+          # Switched to Scene Control Mode (args.value = 1)
           - conditions:
               - "{{ args.value == 1 }}"
             sequence:
-              - service: !input notification_service
-                data:
-                  title: "⚠️ TS004F Mode Switch"
-                  message: >-
-                    Device switched to Mode 2 (Event/Scene).
+              # Update mode sensor if provided
+              - if:
+                  - "{{ mode_sensor_entity != {} }}"
+                then:
+                  - service: input_select.select_option
+                    target:
+                      entity_id: !input mode_sensor
+                    data:
+                      option: "Scene Control Mode"
 
-                    WARNING: Brightness dimming is now DISABLED!
+              # Send notification if enabled
+              - if:
+                  - "{{ notify_enabled }}"
+                then:
+                  - service: !input notification_service
+                    data:
+                      title: "⚠️ TS004F Mode Switch"
+                      message: >-
+                        Device switched to Scene Control Mode.
 
-                    Triple-click again to return to Mode 1 for dimming support.
+                        WARNING: Brightness dimming is now DISABLED!
+
+                        Triple-click again to return to Dimmer Mode for dimming support.
+
+          # Returned to Dimmer Mode (args.value = 0)
           - conditions:
               - "{{ args.value == 0 }}"
             sequence:
-              - service: !input notification_service
-                data:
-                  title: "✅ TS004F Mode Switch"
-                  message: >-
-                    Device returned to Mode 1 (Command/Dimmer).
+              # Update mode sensor if provided
+              - if:
+                  - "{{ mode_sensor_entity != {} }}"
+                then:
+                  - service: input_select.select_option
+                    target:
+                      entity_id: !input mode_sensor
+                    data:
+                      option: "Dimmer Mode"
 
-                    Brightness dimming is now enabled.
+              # Send notification if enabled
+              - if:
+                  - "{{ notify_enabled }}"
+                then:
+                  - service: !input notification_service
+                    data:
+                      title: "✅ TS004F Mode Switch"
+                      message: >-
+                        Device returned to Dimmer Mode.
+
+                        Brightness dimming is now enabled.
 
     # ============================================
     # FALLBACK: Log unexpected events

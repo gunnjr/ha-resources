@@ -273,6 +273,7 @@ Formats raw HA logs into readable ZHA event format.
 ## Related Resources
 
 - **[Enhanced Blueprint](../../../../ha-assets/blueprints/tuya-ts004f/)** - Ready-to-use automation
+- **[Sample Automation Code](sample-ha-code/automations.yaml)** - Sample automations that are triggered by TS004F Events
 - **[Home Assistant Community Post]** - Coming soon
 - **[GitHub Issues](https://github.com/gunnjr/ha-resources/issues)** - Bug reports & questions
 

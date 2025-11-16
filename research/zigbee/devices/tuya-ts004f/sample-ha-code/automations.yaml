@@ -1,0 +1,31 @@
+# Example 1: brightness via signed delta_value
+# trigger:
+#   - platform: event
+#     event_type: zha_event
+#     event_data:
+#       command: knob_rotate
+# action:
+#   - variables:
+#       delta: "{{ trigger.event.data.args.delta_value | int }}"
+#   - service: light.turn_on
+#     target:
+#       entity_id: light.example
+#     data:
+#       brightness_step: "{{ delta }}"
+
+# Example 2: media volume up/down by direction
+# trigger:
+#   - platform: event
+#     event_type: zha_event
+#     event_data:
+#       command: knob_rotate
+# action:
+#   - choose:
+#       - conditions: "{{ trigger.event.data.args.direction == 'right' }}"
+#         sequence:
+#           - service: media_player.volume_up
+#             target: { entity_id: media_player.example }
+#       - conditions: "{{ trigger.event.data.args.direction == 'left' }}"
+#         sequence:
+#           - service: media_player.volume_down
+#             target: { entity_id: media_player.example }
